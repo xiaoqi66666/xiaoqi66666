@@ -1,0 +1,73 @@
+package zuoye2;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+public class TextSimilarity {
+
+    public static Map<String, Integer> getWordVector(String text) {
+        // 将文本转换成词向量
+        String[] words = text.split("\\s+"); // 将文本按空格分割成单词
+        Map<String, Integer> wordVector = new HashMap<>();
+        for (String word : words) {
+            wordVector.put(word, wordVector.getOrDefault(word, 0) + 1); // 统计每个单词的词频
+        }
+        return wordVector;
+    }
+
+    public static double cosineSimilarity(Map<String, Integer> vector1, Map<String, Integer> vector2) {
+        // 计算余弦相似度
+        double numerator = 0.0;
+        double denominator1 = 0.0;
+        double denominator2 = 0.0;
+
+        for (String word : vector1.keySet()) {
+            numerator += vector1.get(word) * vector2.getOrDefault(word, 0);
+            denominator1 += Math.pow(vector1.get(word), 2);
+        }
+
+        for (String word : vector2.keySet()) {
+            denominator2 += Math.pow(vector2.get(word), 2);
+        }
+
+        double similarity = numerator / (Math.sqrt(denominator1) * Math.sqrt(denominator2));
+        return similarity;
+    }
+
+    public static void main(String[] args) {
+        String originalFile = "D:\\论文查重系统\\a.txt"; // 原文文件路径
+        String plagiarizedFile = "D:\\论文查重系统\\b.txt"; // 抄袭版文件路径
+        String outputFile = "D:\\论文查重系统\\c.txt"; // 输出文件路径
+
+        try (BufferedReader originalReader = new BufferedReader(new FileReader(originalFile));
+             BufferedReader plagiarizedReader = new BufferedReader(new FileReader(plagiarizedFile));
+             FileWriter writer = new FileWriter(outputFile)) {
+
+            StringBuilder originalText = new StringBuilder();
+            StringBuilder plagiarizedText = new StringBuilder();
+            String line;
+
+            while ((line = originalReader.readLine()) != null) {
+                originalText.append(line).append(" ");
+            }
+
+            while ((line = plagiarizedReader.readLine()) != null) {
+                plagiarizedText.append(line).append(" ");
+            }
+
+            Map<String, Integer> originalVector = getWordVector(originalText.toString());
+            Map<String, Integer> plagiarizedVector = getWordVector(plagiarizedText.toString());
+
+            double similarity = cosineSimilarity(originalVector, plagiarizedVector);
+
+            writer.write(String.format("%.2f", similarity));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
